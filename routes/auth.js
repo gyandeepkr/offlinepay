@@ -15,7 +15,7 @@ router.post('/register', async (req, res) => {
   if (!email || !password || !name || !publicKey) {
     return res.status(400).json({ error: 'email, password, name, and publicKey are required' });
   }
-  if (db.getUserByEmail(email)) {
+  if (await db.getUserByEmail(email)) {
     return res.status(409).json({ error: 'Email already registered' });
   }
 
@@ -30,7 +30,7 @@ router.post('/register', async (req, res) => {
     accountFlagged: false,
     createdAt: Date.now()
   };
-  db.createUser(user);
+  await db.createUser(user);
 
   const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
   res.json({ token, user: publicUser(user) });
@@ -38,7 +38,7 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  const user = db.getUserByEmail(email);
+  const user = await db.getUserByEmail(email);
   if (!user) return res.status(401).json({ error: 'Invalid email or password' });
 
   const valid = await bcrypt.compare(password, user.passwordHash);
